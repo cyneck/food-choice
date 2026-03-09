@@ -1,0 +1,23 @@
+# Node modules
+node_modules/
+
+# Build files
+dist/
+build/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Data
+data/
