@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>食分choice - 每日三餐决策专家</title>
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #4ecdc4;
+            --accent-color: #ffe66d;
+            --dark-color: #2d3436;
+            --light-color: #f7f1e3;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark-color);
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Meal Cards */
+        .meal-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .meal-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .meal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .meal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .meal-time {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .meal-content {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--dark-color);
+            padding: 15px 0;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .meal-suggestion {
+            font-size: 1rem;
+            color: #666;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .meal-action {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+
+        .btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin-left: 10px;
+        }
+
+        .btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+            transform: scale(1.1);
+        }
+
+        .btn-full {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 25px;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #ff8e8e 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #7ce0d4 100%);
+            color: white;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .filter-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--dark-color);
+        }
+
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--secondary-color);
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            font-size: 0.85rem;
+        }
+
+        /* Loading Animation */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .loading {
+            display: inline-block;
+            animation: bounce 1s infinite;
+        }
+
+        /* Favorites Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .favorite-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .noFavorites {
+            text-align: center;
+            color: #999;
+            padding: 30px 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .meal-content {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ 食分choice</h1>
+            <p>每日三餐决策专家 · 告别选择困难</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="filter-title">✅ 快速筛选</div>
+            <div class="filter-options">
+                <button class="filter-btn active" data-filter="any">全部</button>
+                <button class="filter-btn" data-filter="quick">快手菜</button>
+                <button class="filter-btn" data-filter="healthy">健康</button>
+                <button class="filter-btn" data-filter="vegetarian">素食</button>
+                <button class="filter-btn" data-filter="tasty">重口味</button>
+            </div>
+        </div>
+
+        <!-- Breakfast -->
+        <div class="meal-section">
+            <div class="meal-header">
+                <span class="meal-title">🌅 早餐</span>
+                <span class="meal-time">开启活力一天</span>
+            </div>
+            <div class="meal-content" id="breakfast-food">正在推荐...</div>
+            <div class="meal-suggestion" id="breakfast-desc"></div>
+            <div class="meal-action">
+                <button class="btn" onclick="recommendMeal('breakfast')" title="换一个">🔄</button>
+                <button class="btn" onclick="toggleFavorite('breakfast')" title="收藏">❤️</button>
+                <button class="btn" onclick="showRecipe('breakfast')" title="查看食谱">📋</button>
+            </div>
+        </div>
+
+        <!-- Lunch -->
+        <div class="meal-section">
+            <div class="meal-header">
+                <span class="meal-title">☀️ 午餐</span>
+                <span class="meal-time">补充能量</span>
+            </div>
+            <div class="meal-content" id="lunch-food">正在推荐...</div>
+            <div class="meal-suggestion" id="lunch-desc"></div>
+            <div class="meal-action">
+                <button class="btn" onclick="recommendMeal('lunch')" title="换一个">🔄</button>
+                <button class="btn" onclick="toggleFavorite('lunch')" title="收藏">❤️</button>
+                <button class="btn" onclick="showRecipe('lunch')" title="查看食谱">📋</button>
+            </div>
+        </div>
+
+        <!-- Dinner -->
+        <div class="meal-section">
+            <div class="meal-header">
+                <span class="meal-title">🌙 晚餐</span>
+                <span class="meal-time">轻松享受</span>
+            </div>
+            <div class="meal-content" id="dinner-food">正在推荐...</div>
+            <div class="meal-suggestion" id="dinner-desc"></div>
+            <div class="meal-action">
+                <button class="btn" onclick="recommendMeal('dinner')" title="换一个">🔄</button>
+                <button class="btn" onclick="toggleFavorite('dinner')" title="收藏">❤️</button>
+                <button class="btn" onclick="showRecipe('dinner')" title="查看食谱">📋</button>
+            </div>
+        </div>
+
+        <button class="btn btn-full btn-primary" onclick="recommendAll()">✨ 一键推荐今日三餐</button>
+
+        <div class="footer">
+            <p>食分choice v1.0 · 让每一餐都充满惊喜</p>
+            <p style="margin-top: 10px;">❤️ <button class="btn" onclick="showFavorites()" style="padding: 5px 10px; font-size: 0.8rem; border: 1px solid white;">查看我的收藏</button></p>
+        </div>
+    </div>
+
+    <!-- Favorites Modal -->
+    <div class="modal" id="favoritesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>❤️ 我的收藏</h2>
+                <button class="close-btn" onclick="closeFavorites()">×</button>
+            </div>
+            <div id="favorites-list"></div>
+            <button class="btn btn-full btn-secondary" onclick="clearFavorites()" style="margin-top: 20px;">清空收藏</button>
+        </div>
+    </div>
+
+    <!-- Recipe Modal -->
+    <div class="modal" id="recipeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📋 食谱-prepared</h2>
+                <button class="close-btn" onclick="closeRecipe()">×</button>
+            </div>
+            <div id="recipe-content" style="font-size: 0.95rem; line-height: 1.8;">
+                <p>正在加载食谱...</p>
+                <p style="color: #666; margin-top: 20px; font-style: italic;">
+                    * 由于是 MVP 版本，当前显示基础食谱信息<br>
+                    * 完整版将包含详细步骤、食材清单、烹饪视频</p>
+            </div>
+            <button class="btn btn-full btn-primary" onclick="copyRecipe()">📋 复制食谱</button>
+        </div>
+    </div>
+
+    <script>
+        //食谱数据库
+        const meals = {
+            breakfast: [
+                { name: "豆浆 + 油条", desc: "经典中式早餐，香脆可口", type: ["quick", "tasty"] },
+                { name: "煎饼果子", desc: "天津特色，营养均衡", type: ["quick", "tasty"] },
+                { name: "皮蛋瘦肉粥", desc: "温暖养胃，开启-friendly 一天", type: ["healthy", "quick"] },
+                { name: "鸡蛋灌饼", desc: "高蛋白早餐，能量满满", type: ["quick", "tasty"] },
+                { name: "水果燕麦碗", desc: "健康轻食，美容养颜", type: ["healthy", "quick"] },
+                { name: "小笼包 + 豆浆", desc: "江南风味，鲜香美味", type: ["quick", "tasty"] },
+                { name: "牛奶 + 麦片", desc: "简单快捷，营养丰富", type: ["healthy", "quick"] },
+                { name: "葱油拌面", desc: "香而不腻，老少皆宜", type: ["quick", "tasty"] }
+            ],
+            lunch: [
+                { name: "红烧肉 + 青菜 + 米饭", desc: "经典家常菜，满足感爆棚", type: ["tasty", "meat"] },
+                { name: "宫保鸡丁 + 番茄炒蛋", desc: "双蛋白组合，经济实惠", type: ["healthy", "meat"] },
+                { name: "麻婆豆腐 + 米饭", desc: "川味经典，下饭神器", type: ["tasty", "vegetarian"] },
+                { name: "酸菜鱼 + 清炒时蔬", desc: "鲜香麻辣，营养丰富", type: ["healthy", "meat"] },
+                { name: "回锅肉 + 蒜蓉青菜", desc: "川味回锅，回味无穷", type: ["tasty", "meat"] },
+                { name: "番茄牛腩煲", desc: "暖心暖胃，冬季必备", type: ["healthy", "meat"] },
+                { name: "香菇青菜 + 豆腐汤", desc: "清淡健康，四季皆宜", type: ["healthy", "vegetarian"] },
+                { name: "担担面", desc: "川味特色，香辣过瘾", type: ["tasty", "quick"] }
+            ],
+            dinner: [
+                { name: "清蒸鲈鱼 + 蒜蓉时蔬", desc: "清淡鲜美，适合晚餐", type: ["healthy", "meat"] },
+                { name: "宫保鸡丁 + 小炒黄牛肉", desc: "双肉组合，满足感强", type: ["tasty", "meat"] },
+                { name: "番茄鸡蛋汤 + 炒青菜", desc: "家常味道，温暖人心", type: ["healthy", "quick"] },
+                { name: "红烧排骨 + 米饭", desc: "补充能量，滋补养生", type: ["tasty", "meat"] },
+                { name: "凉拌黄瓜 + 烤鸡翅", desc: "爽口开胃，老少皆宜", type: ["quick", "tasty"] },
+                { name: "蘑菇汤 + 蔬菜沙拉", desc: "轻食晚餐，美容养颜", type: ["healthy", "vegetarian"] },
+                { name: "辣子鸡丁", desc: "香辣过瘾，适合下酒", type: ["tasty", "meat"] },
+                { name: "海鲜豆腐煲", desc: "鲜美可口，营养丰富", type: ["healthy", "meat"] }
+            ]
+        };
+
+        let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        let currentFilter = 'any';
+        let lastRecommendation = {
+            breakfast: null,
+            lunch: null,
+            dinner: null
+        };
+
+        //初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initFilters();
+            recommendAll();
+        });
+
+        function initFilters() {
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    recommendAll();
+                });
+            });
+        }
+
+        function getFilteredMeals(mealType) {
+            if (currentFilter === 'any') return meals[mealType];
+            
+            return meals[mealType].filter(meal => 
+                meal.type.includes(currentFilter)
+            ) || meals[mealType];
+        }
+
+        function recommendMeal(mealType) {
+            const filteredMeals = getFilteredMeals(mealType);
+            let recommendation;
+            
+            //避免重复推荐
+            do {
+                recommendation = filteredMeals[Math.floor(Math.random() * filteredMeals.length)];
+            } while (filteredMeals.length > 1 && JSON.stringify(recommendation) === JSON.stringify(lastRecommendation[mealType]));
+
+            lastRecommendation[mealType] = recommendation;
+            
+            //更新 UI
+            const foodEl = document.getElementById(`${mealType}-food`);
+            const descEl = document.getElementById(`${mealType}-desc`);
+            
+            foodEl.innerHTML = `<span class="loading">✨</span> ${recommendation.name}`;
+            descEl.textContent = recommendation.desc;
+            foodEl.dataset.fullText = recommendation.name;
+
+            //动画效果
+            setTimeout(() => {
+                foodEl.innerHTML = recommendation.name;
+                foodEl.animate([
+                    { transform: 'scale(1)' },
+                    { transform: 'scale(1.1)' },
+                    { transform: 'scale(1)' }
+                ], {
+                    duration: 500,
+                    iterations: 1
+                });
+            }, 100);
+
+            return recommendation;
+        }
+
+        function recommendAll() {
+            recommendMeal('breakfast');
+            recommendMeal('lunch');
+            recommendMeal('dinner');
+            
+            //保存到历史
+            const history = {
+                date: new Date().toISOString().split('T')[0],
+                breakfast: lastRecommendation.breakfast,
+                lunch: lastRecommendation.lunch,
+                dinner: lastRecommendation.dinner
+            };
+            localStorage.setItem('last_recommendation', JSON.stringify(history));
+        }
+
+        function toggleFavorite(mealType) {
+            const recommendation = lastRecommendation[mealType];
+            if (!recommendation) {
+                alert('请先推荐餐食');
+                return;
+            }
+
+            const existingIndex = favorites.findIndex(f => f.mealType === mealType);
+            if (existingIndex !== -1) {
+                favorites.splice(existingIndex, 1);
+            } else {
+                favorites.push({
+                    mealType,
+                    name: recommendation.name,
+                    desc: recommendation.desc,
+                    timestamp: Date.now()
+                });
+            }
+
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            
+            //修复：使用更简单的方法更新收藏按钮颜色
+            const buttons = document.querySelectorAll('.meal-action button');
+            buttons.forEach(btn => {
+                btn.style.color = 'inherit'; //重置所有按钮颜色
+            });
+            
+            const activeBtn = document.querySelector(`.meal-action button[onclick="toggleFavorite('${mealType}')"]`);
+            if (activeBtn) {
+                activeBtn.style.color = favorites.some(f => f.mealType === mealType) ? 'red' : 'inherit';
+            }
+        }
+
+        function showFavorites() {
+            const modal = document.getElementById('favoritesModal');
+            const list = document.getElementById('favorites-list');
+            
+            list.innerHTML = '';
+            
+            if (favorites.length === 0) {
+                list.innerHTML = '<div class="noFavorites">还没有收藏的餐食，快去试试吧！</div>';
+            } else {
+                favorites.forEach((fav, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'favorite-item';
+                    
+                    const mealNames = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐' };
+                    
+                    item.innerHTML = `
+                        <div>
+                            <strong>${mealNames[fav.mealType]}</strong>: ${fav.name}
+                            <div style="font-size: 0.85rem; color: #666;">${fav.desc}</div>
+                        </div>
+                        <button onclick="removeFavorite(${index})" style="color: #ff6b6b; border: none; background: none; cursor: pointer; font-size: 1.2rem;">×</button>
+                    `;
+                    list.appendChild(item);
+                });
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeFavorites() {
+            document.getElementById('favoritesModal').classList.remove('active');
+        }
+
+        function removeFavorite(index) {
+            favorites.splice(index, 1);
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            showFavorites();
+        }
+
+        function clearFavorites() {
+            favorites = [];
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            showFavorites();
+        }
+
+        function showRecipe(mealType) {
+            const recommendation = lastRecommendation[mealType];
+            if (!recommendation) {
+                alert('请先推荐餐食');
+                return;
+            }
+
+            const modal = document.getElementById('recipeModal');
+            const content = document.getElementById('recipe-content');
+            
+            const mealNames = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner' };
+            
+            content.innerHTML = `
+                <h3 style="color: var(--primary-color); margin-bottom: 15px;">${mealNames[mealType]} - ${recommendation.name}</h3>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                    <p style="margin: 0;"><strong>推荐理由：</strong>${recommendation.desc}</p>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0;">
+                    <div style="background: #e3f2fd; padding: 10px; border-radius: 8px;">
+                        <strong>🔥 热量估算</strong>
+                        <p style="margin: 5px 0 0 0;">约 300-500 kcal</p>
+                    </div>
+                    <div style="background: #e8f5e9; padding: 10px; border-radius: 8px;">
+                        <strong>⏱️ 预计时间</strong>
+                        <p style="margin: 5px 0 0 0;">15-30 分钟</p>
+                    </div>
+                    <div style="background: #fff3e0; padding: 10px; border-radius: 8px;">
+                        <strong>👨‍🍳 难度</strong>
+                        <p style="margin: 5px 0 0 0;">★★☆☆☆</p>
+                    </div>
+                    <div style="background: #fce4ec; padding: 10px; border-radius: 8px;">
+                        <strong> 💰 预算</strong>
+                        <p style="margin: 5px 0 0 0;">¥20-40/人</p>
+                    </div>
+                </div>
+                <h4 style="margin: 15px 0 10px 0; color: var(--dark-color);">📝 基本步骤：</h4>
+                <ol style="padding-left: 20px; line-height: 1.8;">
+                    <li>准备所需食材和调味料</li>
+                    <li>按照"热锅冷油"原则开始烹饪</li>
+                    <li>掌握好火候，避免过度烹饪</li>
+                    <li>最后调味，装盘享用</li>
+                </ol>
+                <p style="color: #666; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                    <strong>💡 提示：</strong> 实际烹饪时请根据个人口味调整调味料用量，食品安全第一！
+                </p>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function closeRecipe() {
+            document.getElementById('recipeModal').classList.remove('active');
+        }
+
+        function copyRecipe() {
+            const recommendation = lastRecommendation.breakfast || lastRecommendation.lunch;
+            const text = `${recommendation.name}\n${recommendation.desc}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('食谱已复制到剪贴板！');
+                closeRecipe();
+            }).catch(() => {
+                alert('复制失败，请手动复制');
+            });
+        }
+
+        //点击遮罩关闭模态框
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
